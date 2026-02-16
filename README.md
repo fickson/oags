@@ -21,7 +21,6 @@ The canonical spec is [`specs/oags-v0.1.md`](specs/oags-v0.1.md) (v0.1.0, Draft)
 ```
 ├── specs/          # Canonical specification
 ├── examples/       # Reference governance artifacts
-├── drafts/         # Superseded drafts (historical reference)
 ├── LICENSE         # Apache 2.0
 ├── CONTRIBUTING.md # Contribution guidelines
 └── CODE_OF_CONDUCT.md
