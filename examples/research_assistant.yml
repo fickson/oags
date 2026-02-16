@@ -1,0 +1,133 @@
+spec_version: "0.1"
+
+project:
+  name: research-assistant
+  version: "2.1.0"
+  description: "Searches academic papers, summarizes findings, and drafts reports"
+  authors:
+    - "research-team@example.com"
+  license: MIT
+
+identity:
+  model: claude-sonnet-4-5-20250929
+  system_prompt_path: ./prompts/research_system.md
+  tools_path: ./tools/research_tools.json
+
+capabilities:
+  provides:
+    - "research:search"
+    - "research:summarize"
+    - "research:draft_report"
+  requires:
+    - "storage:write"
+  delegates_to:
+    - agent_type: citation-checker
+      capabilities:
+        - "research:verify_citation"
+
+discovery:
+  tags:
+    - research
+    - academic
+    - summarization
+  categories:
+    - knowledge-work
+  search_keywords:
+    - "paper search"
+    - "literature review"
+    - "academic research"
+
+deployment:
+  env:
+    - name: ANTHROPIC_API_KEY
+      required: true
+      secret: true
+      description: "Anthropic API key for Claude model access"
+    - name: SEMANTIC_SCHOLAR_API_KEY
+      required: false
+      secret: true
+      description: "Semantic Scholar API key for paper search"
+    - name: OUTPUT_DIR
+      required: false
+      secret: false
+      default_value: "./output"
+
+permissions:
+  network:
+    enabled: true
+    require_tls: true
+    allowed_domains:
+      - "api.semanticscholar.org"
+      - "api.crossref.org"
+      - "api.anthropic.com"
+    blocked_domains:
+      - "*.social-media.example"
+  filesystem:
+    enabled: true
+    allowed_paths:
+      - "./output/*"
+      - "./cache/*"
+    blocked_paths:
+      - "/etc/*"
+      - "/var/*"
+    allowed_extensions:
+      - ".json"
+      - ".md"
+      - ".txt"
+      - ".csv"
+
+tools:
+  allowed_tools:
+    - name: "search_papers"
+    - name: "fetch_abstract"
+    - name: "file_write"
+    - name: "json_parse"
+  blocked_tools:
+    - "shell_exec"
+    - "eval"
+    - "http_post"
+
+models:
+  allowed_models:
+    - "claude-sonnet-4-5-20250929"
+    - "claude-haiku-4-5-20251001"
+
+rate_limits:
+  per_agent:
+    requests_per_minute: 30
+    tokens_per_minute: 50000
+
+custom_rules:
+  - id: no-raw-urls-in-output
+    name: "Require citation format"
+    enabled: true
+    scope:
+      capabilities: ["research:draft_report"]
+    conditions:
+      - field: "content"
+        operator: matches
+        value: "https?://[^\\s]+"
+    logic: any
+    action: warn
+    message: "Raw URLs in reports should be converted to proper citations"
+
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-5-20250929
+  api_key_env: ANTHROPIC_API_KEY
+  temperature: 0.3
+  max_tokens: 4096
+  streaming: true
+
+memory:
+  type: sqlite
+  max_messages: 200
+  config:
+    db_path: "./cache/memory.db"
+
+compliance:
+  audit_logging: true
+
+logger:
+  environment: production
+  enabled: true

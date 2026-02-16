@@ -1,47 +1,70 @@
-# Example OAGS Policy: Customer Support Agent
-# This policy demonstrates Level 1 (Self-Attested) compliance.
+spec_version: "0.1"
 
-version: "0.1"
-
-agent:
-  name: "support-pro-v2"
-  description: "Handles billing and ticket inquiries"
-  model: "gpt-4o"
+project:
+  name: support-pro-v2
   version: "1.0.4"
+  description: "Handles billing and ticket inquiries"
 
-governance:
-  # 1. Network: Restrict the agent to specific APIs
+identity:
+  model: gpt-4o
+  system_prompt_path: ./system_prompt.md
+  tools_path: ./tools.json
+
+permissions:
   network:
     enabled: true
+    require_tls: true
     allowed_domains:
-      - "api.stripe.com"      # For billing lookups
-      - "help-desk.zendesk.com" # For ticket management
+      - "api.stripe.com"
+      - "help-desk.zendesk.com"
     blocked_domains:
-      - "*"                   # Deny all other egress by default
-    tls_required: true
-
-  # 2. Tools: Define specific constraints for sensitive operations
-  tools:
-    allowed_tools:
-      - "zendesk:read_ticket"
-      - "stripe:list_subscriptions"
-    restricted_tools:
-      - name: "stripe:issue_refund"
-        approval_required: true # Requires human intervention
-        max_amount: 50.00       # Hard limit on agent autonomy
-
-  # 3. Filesystem: Only allow access to a local knowledge base
+      - "*"
   filesystem:
     enabled: true
-    read_only: 
-      - "./kb_docs"
     allowed_paths:
+      - "./kb_docs"
       - "./logs/agent.log"
     blocked_paths:
-      - "*"                   # Deny access to host environment
+      - "*"
 
-  # 4. Safety: Prevent token-spending loops
-  safety:
-    max_tokens_per_request: 2000
-    max_tool_calls_per_turn: 3
-    pii_filter: true          # Automatically redact emails/SSNs in output
+tools:
+  allowed_tools:
+    - name: "zendesk:read_ticket"
+    - name: "stripe:list_subscriptions"
+  blocked_tools:
+    - "shell_exec"
+    - "eval"
+
+rate_limits:
+  per_agent:
+    tokens_per_minute: 2000
+
+custom_rules:
+  - id: refund-approval
+    name: "Require approval for refunds"
+    enabled: true
+    scope:
+      capabilities: ["stripe:issue_refund"]
+    conditions:
+      - field: "amount"
+        operator: greater_than
+        value: 50.00
+    logic: any
+    action: deny
+    message: "Refunds over $50 require human approval"
+  - id: tool-call-limit
+    name: "Limit tool calls per turn"
+    enabled: true
+    scope:
+      capabilities: ["*"]
+    conditions:
+      - field: "tool_calls_this_turn"
+        operator: greater_than
+        value: 3
+    logic: any
+    action: deny
+    message: "Maximum 3 tool calls per turn"
+
+compliance:
+  sensitive_data_detection: true
+  audit_logging: true

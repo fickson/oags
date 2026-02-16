@@ -12,23 +12,35 @@ OAGS defines **local-first governance primitives** that work across any language
 - **Mutual Authentication** — agent-to-agent trust handshake protocol
 - **Audit Trail** — structured, tamper-evident audit logging
 
-## Specification
+## Specifications
 
-The canonical spec is [`specs/oags-v0.1.md`](specs/oags-v0.1.md) (v0.1.0, Draft).
+- **[OAGS v0.1](specs/oags-v0.1.md)** - The core specification: identity, policy, enforcement, audit, verification, trust headers, handshake, and A2A types (v0.1.1, Draft).
+- **[sekuire.yml Schema](specs/sekuire-yml-schema.md)** - Canonical file format reference for `sekuire.yml` / `sekuire.json`. Defines the unified manifest + policy + SDK extension schema.
 
 ## Repository Structure
 
 ```
-├── specs/          # Canonical specification
-├── examples/       # Reference governance artifacts
-├── LICENSE         # Apache 2.0
-├── CONTRIBUTING.md # Contribution guidelines
+├── specs/
+│   ├── oags-v0.1.md              # Core specification
+│   └── sekuire-yml-schema.md     # File format reference
+├── examples/
+│   ├── customer_support.yml      # Policy with restrictions and custom rules
+│   ├── research_assistant.yml    # Full-featured (manifest + policy + SDK)
+│   ├── minimal_agent.yml         # Bare minimum Level 1 conformance
+│   └── multi_provider.yml        # LLM provider configuration variants
+├── LICENSE                       # Apache 2.0
+├── CONTRIBUTING.md               # Contribution guidelines
 └── CODE_OF_CONDUCT.md
 ```
 
 ## Examples
 
-See [`examples/`](examples/) for reference policy and governance workflow artifacts.
+| File | Description |
+|------|-------------|
+| [customer_support.yml](examples/customer_support.yml) | Customer support agent with network/filesystem restrictions, tool allowlists, rate limits, and custom rules for refund approval |
+| [research_assistant.yml](examples/research_assistant.yml) | Full-featured example showing all three zones: manifest with capabilities/discovery/deployment, policy, and SDK extensions (LLM, memory, logger) |
+| [minimal_agent.yml](examples/minimal_agent.yml) | Bare minimum Level 1 conformance - just `spec_version`, `project`, and `identity` |
+| [multi_provider.yml](examples/multi_provider.yml) | LLM provider configuration variants: OpenAI, Anthropic, Google, Ollama, and custom/self-hosted |
 
 ## Contributing
 

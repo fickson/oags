@@ -1,0 +1,10 @@
+spec_version: "0.1"
+
+project:
+  name: hello-agent
+  version: "0.1.0"
+
+identity:
+  model: gpt-4o
+  system_prompt_path: ./system_prompt.md
+  tools_path: ./tools.json

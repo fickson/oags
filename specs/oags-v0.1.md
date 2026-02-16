@@ -1,6 +1,6 @@
 # Open Agent Governance Specification
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** Draft
 **Date:** 2026-02-16
 **License:** Apache 2.0
@@ -350,7 +350,373 @@ deployment:
 
 ---
 
-## 4. Policy Declaration
+## 4. System Prompt Format
+
+### 4.1 Overview
+
+The system prompt is a natural language document that defines an agent's persona, behavioral instructions, capabilities, constraints, and interaction patterns. It is one of the three identity inputs used to compute the SekuireID (Section 2). Any change to the system prompt changes the agent's identity.
+
+### 4.2 File Format
+
+The system prompt MUST be stored as a plain text file, referenced by the `identity.system_prompt_path` field in the agent manifest (Section 3). The RECOMMENDED format is Markdown (`.md`).
+
+Implementations MUST support the following file extensions:
+- `.md` (Markdown — preferred)
+- `.txt` (plain text)
+
+The file MUST be encoded as UTF-8 without BOM.
+
+### 4.3 Content Structure
+
+While the internal structure of a system prompt is not strictly enforced, conforming implementations SHOULD organize the prompt using the following sections. Each section is OPTIONAL, but the overall document MUST provide sufficient context for the agent's intended behavior.
+
+```markdown
+# {Agent Name}
+
+{Brief description of what the agent is and does.}
+
+## Role
+
+{The agent's persona, expertise domain, and behavioral identity.}
+
+## Capabilities
+
+{Enumerated list of operations the agent can perform, aligned with
+the tools defined in Section 5.}
+
+## Behavior Guidelines
+
+{Constraints on how the agent should act: tone, confirmation requirements,
+safety guardrails, escalation rules, refusal conditions.}
+
+## Response Format
+
+{Expected output structure: formatting conventions, length limits,
+structured data expectations.}
+
+## Security
+
+{Security-relevant instructions: data handling, access boundaries,
+input validation, rate limiting, PII handling.}
+
+## Delegation
+
+{If the agent participates in A2A workflows: how it receives and
+returns delegated tasks, what protocols it follows.}
+```
+
+### 4.4 Normative Requirements
+
+1. **Encoding**: The file MUST be valid UTF-8.
+2. **Whitespace**: Leading and trailing whitespace MUST be trimmed before hashing (see Section 2.2, Step 1). Interior whitespace (including newlines) is preserved as-is.
+3. **No Executable Content**: The system prompt MUST NOT contain executable code, template directives, or variable interpolation syntax. It is a static document.
+4. **No Secrets**: The system prompt MUST NOT contain API keys, tokens, passwords, or other secret material. Secrets belong in deployment environment variables (Section 3.3, `DeploymentConfig.env`).
+5. **Determinism**: The same prompt file content MUST always produce the same `system_prompt_hash`.
+
+### 4.5 Versioning
+
+System prompt changes produce a new SekuireID. Implementations SHOULD treat system prompt modifications as a version change and SHOULD update the `project.version` field in the manifest accordingly.
+
+When evolving a system prompt:
+- **Behavioral changes** (new capabilities, changed constraints): bump minor or major version.
+- **Editorial changes** (typos, formatting): note that even editorial changes alter the SekuireID.
+
+### 4.6 Size Limits
+
+Implementations SHOULD support system prompts up to 100,000 bytes (after UTF-8 encoding). Implementations MAY reject prompts exceeding this limit.
+
+### 4.7 Example
+
+```markdown
+# Google Workspace Agent
+
+You are a specialized AI agent for managing Google Workspace documents,
+specifically Google Docs. You help users create, read, update, and
+organize their documents.
+
+## Capabilities
+
+1. **Create Documents**: Create new Google Docs with titles and content
+2. **Read Documents**: Retrieve and display document content
+3. **Update Documents**: Replace or modify document content
+4. **List Documents**: Show documents matching search criteria
+
+## Behavior Guidelines
+
+- Always confirm document operations before making changes
+- Handle errors gracefully and explain what went wrong
+- Respect user privacy — never share document contents with unauthorized parties
+
+## Security
+
+- Only access documents the authenticated user has permission to access
+- Never store or log sensitive document content
+- Validate all input parameters before executing operations
+```
+
+---
+
+## 5. Tool Definition Schema
+
+### 5.1 Overview
+
+Tools are the executable capabilities an agent exposes. The tool definition file is one of the three identity inputs used to compute the SekuireID (Section 2). It declares each tool's name, description, and input parameter schema. The file is the single source of truth for what operations an agent can perform.
+
+### 5.2 File Format
+
+The tool definition file MUST be stored as JSON, referenced by the `identity.tools_path` field in the agent manifest (Section 3).
+
+The file MUST be encoded as UTF-8 without BOM.
+
+### 5.3 Top-Level Structure
+
+The tools file MUST be a JSON array of `ToolDefinition` objects:
+
+```json
+[
+  { "name": "...", "description": "...", "parameters": { ... } },
+  { "name": "...", "description": "...", "parameters": { ... } }
+]
+```
+
+> **Note:** The SDK configuration loaders also support a versioned wrapper format (`{ "version": "1.0", "tools": [...] }`). For identity hashing purposes, the file content is parsed and canonicalized as-is regardless of wrapper structure.
+
+### 5.4 ToolDefinition Schema
+
+Each tool in the array MUST conform to the following schema:
+
+```typescript
+interface ToolDefinition {
+  /** Unique tool name. MUST match ^[a-z][a-z0-9_]{0,63}$ */
+  name: string;
+
+  /** Human-readable description of what the tool does */
+  description: string;
+
+  /** JSON Schema object describing the tool's input parameters */
+  parameters: ParametersSchema;
+
+  /** Optional: tool category for policy matching (e.g. "files", "network") */
+  category?: string;
+
+  /** Optional: governance metadata */
+  compliance?: ComplianceMetadata;
+}
+```
+
+### 5.5 ToolDefinition Field Requirements
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `name` | MUST | string | Unique tool identifier. MUST match the pattern `^[a-z][a-z0-9_]{0,63}$` (lowercase alphanumeric with underscores, 1–64 characters, starting with a letter). |
+| `description` | MUST | string | Human-readable description. SHOULD be a single sentence or short paragraph. MUST NOT be empty. |
+| `parameters` | MUST | object | JSON Schema object describing the tool's input. See Section 5.6. |
+| `category` | MAY | string | Logical grouping for policy matching. Used in category wildcard patterns (e.g., `files:*`). See Section 7.7 for pattern semantics. |
+| `compliance` | MAY | object | Governance annotations. See Section 5.9. |
+
+### 5.6 Parameters Schema
+
+The `parameters` field MUST be a valid [JSON Schema](https://json-schema.org/) object describing the tool's input. Implementations MUST support the following subset of JSON Schema:
+
+```typescript
+interface ParametersSchema {
+  /** MUST be "object" */
+  type: "object";
+
+  /** Map of parameter names to their schema definitions */
+  properties: Record<string, ParameterDefinition>;
+
+  /** Array of required parameter names */
+  required?: string[];
+}
+
+interface ParameterDefinition {
+  /** JSON Schema type */
+  type: "string" | "number" | "integer" | "boolean" | "array" | "object";
+
+  /** Human-readable description of the parameter */
+  description?: string;
+
+  /** Default value */
+  default?: any;
+
+  /** Enumerated allowed values (for string or number types) */
+  enum?: any[];
+
+  /** For type "array": schema of array items */
+  items?: ParameterDefinition;
+
+  /** For type "object": nested properties */
+  properties?: Record<string, ParameterDefinition>;
+
+  /** For type "object": required nested fields */
+  required?: string[];
+
+  /** Minimum value (for number/integer) or minimum length (for string) */
+  minimum?: number;
+  minLength?: number;
+
+  /** Maximum value (for number/integer) or maximum length (for string) */
+  maximum?: number;
+  maxLength?: number;
+
+  /** Regex pattern (for string) */
+  pattern?: string;
+}
+```
+
+### 5.7 Supported JSON Schema Types
+
+Implementations MUST support the following parameter types:
+
+| Type | JSON Type | Description | Example |
+|------|-----------|-------------|---------|
+| `string` | string | UTF-8 text | `"hello"` |
+| `number` | number | IEEE 754 double | `3.14` |
+| `integer` | number | Whole number | `42` |
+| `boolean` | boolean | True or false | `true` |
+| `array` | array | Ordered list; `items` SHOULD be specified | `[1, 2, 3]` |
+| `object` | object | Nested key-value structure | `{"key": "value"}` |
+
+### 5.8 Tool Naming Conventions
+
+Tool names serve as the primary key for policy matching (Section 7). Implementations SHOULD follow these conventions:
+
+- Use `snake_case` (e.g., `create_document`, `read_thread`).
+- Prefix with a domain when the agent spans multiple services (e.g., `google_docs_create`, `slack_send_message`).
+- Category-based naming enables wildcard policy rules: a tool named `file_read` matches the category pattern `file_*` and `files:read`.
+
+### 5.9 Compliance Metadata (OPTIONAL)
+
+Tools MAY include governance annotations that inform policy enforcement:
+
+```typescript
+interface ComplianceMetadata {
+  /** Access classification */
+  level?: "public" | "internal" | "restricted" | "system";
+
+  /** Whether execution requires explicit human approval */
+  requires_approval?: boolean;
+
+  /** Data classification tags (e.g., "pii", "financial", "health") */
+  data_tags?: string[];
+}
+```
+
+| Level | Description |
+|-------|-------------|
+| `public` | No access restrictions; safe for any caller |
+| `internal` | Requires authenticated agent identity |
+| `restricted` | Requires elevated permissions or approval workflow |
+| `system` | Infrastructure-only; not exposed to end users or external agents |
+
+### 5.10 Normative Requirements
+
+1. **Uniqueness**: Tool names MUST be unique within a single tools file. Duplicate names MUST cause a validation error.
+2. **Encoding**: The file MUST be valid UTF-8 and valid JSON.
+3. **Canonicalization**: For identity hashing (Section 2.2, Step 2), the file is parsed as JSON and re-serialized in compact canonical form (no extra whitespace, keys in parse order). Implementations MUST NOT sort keys during canonicalization.
+4. **No Executable Content**: The tools file defines schemas only. It MUST NOT contain implementation code, file paths to handlers, or runtime bindings. Implementation details belong in SDK configuration (non-normative).
+5. **Determinism**: The same file content MUST always produce the same `tools_hash`.
+6. **Validation**: Implementations SHOULD validate tool definitions against this schema before computing the identity hash.
+
+### 5.11 Size Limits
+
+- Maximum tools per file: implementations SHOULD support at least 256 tools.
+- Maximum file size: implementations SHOULD support files up to 1 MB.
+- Maximum parameter depth (nested objects): implementations SHOULD support at least 5 levels of nesting.
+
+### 5.12 Relationship to Policy Enforcement
+
+Tool names declared in this file are the identifiers matched against `allowed_tools` and `blocked_tools` in the policy (Section 6.6). A tool that exists in the definition file but is blocked by policy MUST NOT execute. A tool invocation for a name not present in the definition file MUST be rejected regardless of policy.
+
+### 5.13 Example
+
+```json
+[
+  {
+    "name": "create_document",
+    "description": "Create a new Google Doc with the specified title and optional content",
+    "category": "docs",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the new document"
+        },
+        "content": {
+          "type": "string",
+          "description": "Initial content to add to the document"
+        },
+        "folder_id": {
+          "type": "string",
+          "description": "Google Drive folder ID to create the document in"
+        }
+      },
+      "required": ["title"]
+    }
+  },
+  {
+    "name": "search_drive",
+    "description": "Search Google Drive for files matching a query",
+    "category": "drive",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query string"
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Maximum number of results to return",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 100
+        },
+        "file_type": {
+          "type": "string",
+          "description": "Filter by file type",
+          "enum": ["document", "spreadsheet", "presentation", "pdf", "any"]
+        }
+      },
+      "required": ["query"]
+    },
+    "compliance": {
+      "level": "internal",
+      "requires_approval": false,
+      "data_tags": ["user_content"]
+    }
+  },
+  {
+    "name": "send_notification",
+    "description": "Send a notification message to a Slack channel",
+    "category": "messaging",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "channel_id": {
+          "type": "string",
+          "description": "The Slack channel ID"
+        },
+        "text": {
+          "type": "string",
+          "description": "The notification message text"
+        },
+        "thread_ts": {
+          "type": "string",
+          "description": "Thread timestamp to reply in a thread"
+        }
+      },
+      "required": ["channel_id", "text"]
+    }
+  }
+]
+```
+
+---
+
+## 6. Policy Declaration
 
 ### 4.1 Overview
 
@@ -372,11 +738,9 @@ interface PolicyContent {
     allowed_tools?: ToolEntry[];
     blocked_tools?: string[];
   };
-  agent?: {
-    models?: {
-      allowed_models?: string[];
-      blocked_models?: string[];
-    };
+  models?: {
+    allowed_models?: string[];
+    blocked_models?: string[];
   };
   rate_limits?: {
     per_agent?: PerAgentLimits;
@@ -579,13 +943,12 @@ tools:
     - "shell_exec"
     - "eval"
 
-agent:
-  models:
-    allowed_models:
-      - "gpt-4o"
-      - "claude-sonnet-4-5-20250929"
-    blocked_models:
-      - "gpt-3.5-turbo"
+models:
+  allowed_models:
+    - "gpt-4o"
+    - "claude-sonnet-4-5-20250929"
+  blocked_models:
+    - "gpt-3.5-turbo"
 
 rate_limits:
   per_agent:
@@ -1425,7 +1788,60 @@ The Rust CLI implementation (`packages/cli/src/services/auth.rs`) is the referen
 - Interop test suite and compliance harness
 - `require_approval` as a third enforcement action (beyond allow/deny)
 
-## Appendix E: Changelog
+## Appendix E: Unified File Format (Informative)
+
+A `sekuire.yml` file MAY combine agent manifest (Section 3), policy (Section 4), and SDK runtime extensions in a single file. The three zones are:
+
+1. **Manifest zone** - `spec_version`, `project`, `identity`, `capabilities`, `discovery`, `a2a`, `deployment`
+2. **Policy zone** - `permissions`, `tools`, `models`, `rate_limits`, `custom_rules`
+3. **SDK extension zone** - `llm`, `memory`, `compliance`, `logger`, `server` (non-normative)
+
+This layout is RECOMMENDED but not required. Implementations MAY split manifest and policy into separate files.
+
+```yaml
+# Zone 1: Manifest (OAGS Section 3)
+spec_version: "0.1"
+
+project:
+  name: my-agent
+  version: "1.0.0"
+
+identity:
+  model: gpt-4o
+  system_prompt_path: ./system_prompt.md
+  tools_path: ./tools.json
+
+# Zone 2: Policy (OAGS Section 4)
+permissions:
+  network:
+    enabled: true
+    require_tls: true
+
+tools:
+  blocked_tools:
+    - "shell_exec"
+
+models:
+  allowed_models:
+    - "gpt-4o"
+
+# Zone 3: SDK Extensions (non-normative)
+llm:
+  provider: openai
+  model: gpt-4o
+  api_key_env: OPENAI_API_KEY
+```
+
+For the full canonical schema, see `sekuire-yml-schema.md`.
+
+## Appendix F: Changelog
+
+### v0.1.1 (2026-02-16)
+
+- Renamed `agent.models` to root-level `models` in PolicyContent schema (Section 4.2) to eliminate ambiguity with the overloaded `agent` key
+- Updated Section 4.12 example policy to use `models` instead of `agent.models`
+- Added Appendix E: Unified File Format (informative) describing how manifest + policy + SDK extensions coexist in a single `sekuire.yml`
+- Published companion document `sekuire-yml-schema.md` as the canonical file format reference
 
 ### v0.1.0 (2026-02-16)
 
