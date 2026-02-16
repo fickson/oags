@@ -1,0 +1,47 @@
+# Example OAGS Policy: Customer Support Agent
+# This policy demonstrates Level 1 (Self-Attested) compliance.
+
+version: "0.1"
+
+agent:
+  name: "support-pro-v2"
+  description: "Handles billing and ticket inquiries"
+  model: "gpt-4o"
+  version: "1.0.4"
+
+governance:
+  # 1. Network: Restrict the agent to specific APIs
+  network:
+    enabled: true
+    allowed_domains:
+      - "api.stripe.com"      # For billing lookups
+      - "help-desk.zendesk.com" # For ticket management
+    blocked_domains:
+      - "*"                   # Deny all other egress by default
+    tls_required: true
+
+  # 2. Tools: Define specific constraints for sensitive operations
+  tools:
+    allowed_tools:
+      - "zendesk:read_ticket"
+      - "stripe:list_subscriptions"
+    restricted_tools:
+      - name: "stripe:issue_refund"
+        approval_required: true # Requires human intervention
+        max_amount: 50.00       # Hard limit on agent autonomy
+
+  # 3. Filesystem: Only allow access to a local knowledge base
+  filesystem:
+    enabled: true
+    read_only: 
+      - "./kb_docs"
+    allowed_paths:
+      - "./logs/agent.log"
+    blocked_paths:
+      - "*"                   # Deny access to host environment
+
+  # 4. Safety: Prevent token-spending loops
+  safety:
+    max_tokens_per_request: 2000
+    max_tool_calls_per_turn: 3
+    pii_filter: true          # Automatically redact emails/SSNs in output
