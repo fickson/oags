@@ -1,0 +1,51 @@
+[
+  {
+    "name": "summarize_text",
+    "description": "Generate a concise summary of the provided text",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text to summarize"
+        },
+        "max_length": {
+          "type": "integer",
+          "description": "Maximum summary length in words",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 500
+        },
+        "style": {
+          "type": "string",
+          "description": "Summary style",
+          "enum": ["bullet_points", "paragraph", "one_liner"],
+          "default": "paragraph"
+        }
+      },
+      "required": ["text"]
+    }
+  },
+  {
+    "name": "translate_text",
+    "description": "Translate text to a target language",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The text to translate"
+        },
+        "target_language": {
+          "type": "string",
+          "description": "ISO 639-1 language code (e.g. 'es', 'fr', 'de')"
+        },
+        "source_language": {
+          "type": "string",
+          "description": "ISO 639-1 code of the source language. Omit for auto-detection."
+        }
+      },
+      "required": ["text", "target_language"]
+    }
+  }
+]

@@ -24,23 +24,25 @@ OAGS defines **local-first governance primitives** that work across any language
 │   ├── oags-v0.1.md              # Core specification
 │   └── sekuire-yml-schema.md     # File format reference
 ├── examples/
-│   ├── customer_support.yml      # Policy with restrictions and custom rules
-│   ├── research_assistant.yml    # Full-featured (manifest + policy + SDK)
-│   ├── minimal_agent.yml         # Bare minimum Level 1 conformance
-│   └── multi_provider.yml        # LLM provider configuration variants
+│   ├── customer-support/         # Policy with restrictions and custom rules
+│   ├── research-assistant/       # Full-featured (manifest + policy + SDK)
+│   ├── minimal-agent/            # Bare minimum Level 1 conformance
+│   └── multi-provider/           # LLM provider configuration variants
 ├── LICENSE                       # Apache 2.0
 ├── CONTRIBUTING.md               # Contribution guidelines
 └── CODE_OF_CONDUCT.md
 ```
 
+Each example is a self-contained agent project with a `sekuire.yml`, `system_prompt.md`, and `tools.json`.
+
 ## Examples
 
-| File | Description |
-|------|-------------|
-| [customer_support.yml](examples/customer_support.yml) | Customer support agent with network/filesystem restrictions, tool allowlists, rate limits, and custom rules for refund approval |
-| [research_assistant.yml](examples/research_assistant.yml) | Full-featured example showing all three zones: manifest with capabilities/discovery/deployment, policy, and SDK extensions (LLM, memory, logger) |
-| [minimal_agent.yml](examples/minimal_agent.yml) | Bare minimum Level 1 conformance - just `spec_version`, `project`, and `identity` |
-| [multi_provider.yml](examples/multi_provider.yml) | LLM provider configuration variants: OpenAI, Anthropic, Google, Ollama, and custom/self-hosted |
+| Example | Description |
+|---------|-------------|
+| [customer-support](examples/customer-support/) | Billing and ticket agent with network/filesystem restrictions, tool allowlists, rate limits, custom rules for refund approval, and compliance metadata on sensitive tools |
+| [research-assistant](examples/research-assistant/) | Full-featured example showing all three zones: manifest with capabilities/discovery/deployment, policy, and SDK extensions (LLM, memory, logger) |
+| [minimal-agent](examples/minimal-agent/) | Bare minimum Level 1 conformance - just `spec_version`, `project`, `identity`, and one tool |
+| [multi-provider](examples/multi-provider/) | Shows how the same agent can target different LLM providers by changing the SDK extension section |
 
 ## Contributing
 
