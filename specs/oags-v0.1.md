@@ -25,7 +25,7 @@ This document defines the Open Agent Governance (OAG) specification: a set of lo
 
 ### 1.3 Scope
 
-This specification defines local-first governance primitives: identity, policy, enforcement, audit, verification, trust headers, mutual authentication, and agent-to-agent communication types. These primitives work standalone in any runtime environment.
+This specification defines local-first governance primitives: identity, system prompt format, tool definition schema, policy, enforcement, audit, verification, trust headers, mutual authentication, and agent-to-agent communication types. These primitives work standalone in any runtime environment.
 
 ### 1.4 Notation
 
@@ -179,7 +179,7 @@ Hex strings MAY optionally include a `0x` prefix. Implementations MUST strip the
 
 ### 2.6 Nonce Generation
 
-Nonces are used in the handshake protocol (Section 9). A nonce MUST be 32 cryptographically secure random bytes, encoded as a 64-character lowercase hexadecimal string.
+Nonces are used in the handshake protocol (Section 11). A nonce MUST be 32 cryptographically secure random bytes, encoded as a 64-character lowercase hexadecimal string.
 
 ---
 
@@ -718,13 +718,13 @@ Tool names declared in this file are the identifiers matched against `allowed_to
 
 ## 6. Policy Declaration
 
-### 4.1 Overview
+### 6.1 Overview
 
 Policies define governance constraints that an agent MUST operate within. A policy declares what network, filesystem, API, tool, and model access is permitted, along with rate limits and custom rules.
 
 Policies are evaluated locally by the SDK's policy enforcer. They can be loaded from a local configuration file or fetched from a remote API.
 
-### 4.2 Policy Content Schema
+### 6.2 Policy Content Schema
 
 ```typescript
 interface PolicyContent {
@@ -751,7 +751,7 @@ interface PolicyContent {
 
 **Source:** `packages/sdks/typescript/src/config/loader.ts:23-63`, `packages/sdks/typescript/src/types/policy.ts`
 
-### 4.3 Network Permissions
+### 6.3 Network Permissions
 
 ```typescript
 interface NetworkPermissions {
@@ -762,12 +762,12 @@ interface NetworkPermissions {
 }
 ```
 
-Domain matching rules (see Section 5.5 for full semantics):
+Domain matching rules (see Section 7.5 for full semantics):
 - Exact match: `"api.example.com"` matches only `api.example.com`
 - Wildcard subdomain: `"*.example.com"` matches `api.example.com` and `sub.api.example.com`, and also matches the bare domain `example.com`
 - Universal wildcard: `"*"` matches all domains
 
-### 4.4 Filesystem Permissions
+### 6.4 Filesystem Permissions
 
 ```typescript
 interface FilesystemPermissions {
@@ -778,12 +778,12 @@ interface FilesystemPermissions {
 }
 ```
 
-Path matching rules (see Section 5.6):
+Path matching rules (see Section 7.6):
 - Exact match: `"/data/config.json"` matches only that path
 - Prefix wildcard: `"/data/*"` matches any path starting with `/data/`
 - Trailing wildcard: `"/data*"` matches any path starting with `/data`
 
-### 4.5 API Permissions
+### 6.5 API Permissions
 
 ```typescript
 interface ApiPermissions {
@@ -795,7 +795,7 @@ interface ApiPermissions {
 }
 ```
 
-### 4.6 Tool Permissions
+### 6.6 Tool Permissions
 
 ```typescript
 interface ToolEntry {
@@ -804,13 +804,13 @@ interface ToolEntry {
 }
 ```
 
-Tool pattern matching rules (see Section 5.7 for full semantics):
+Tool pattern matching rules (see Section 7.7 for full semantics):
 - Exact match: `"file_read"` matches only `file_read`
 - Category wildcard: `"files:*"` matches all tools in the `files` category
 - Category subset: `"files:[read,write]"` matches `file_read` and `file_write`
 - Glob pattern: `"file_*"` matches any tool starting with `file_`
 
-### 4.7 Model Permissions
+### 6.7 Model Permissions
 
 ```typescript
 interface ModelPermissions {
@@ -819,7 +819,7 @@ interface ModelPermissions {
 }
 ```
 
-### 4.8 Rate Limits
+### 6.8 Rate Limits
 
 ```typescript
 interface PerAgentLimits {
@@ -831,7 +831,7 @@ interface PerAgentLimits {
 
 Rate limits are enforced using a sliding window. When a limit is exceeded, the enforcer MUST deny the action with rule ID `rate_limit.exceeded`.
 
-### 4.9 Custom Rules
+### 6.9 Custom Rules
 
 Custom rules allow arbitrary governance logic beyond the built-in permission categories.
 
@@ -870,7 +870,7 @@ type ConditionOperator =
 
 **Source:** `packages/sdks/typescript/src/types/policy.ts:15-41`
 
-### 4.10 Policy Integrity Envelope (OPTIONAL)
+### 6.10 Policy Integrity Envelope (OPTIONAL)
 
 Implementations MAY wrap policy content in an integrity envelope for transport or storage:
 
@@ -893,14 +893,14 @@ Rules:
 
 **Source:** `packages/sdks/typescript/src/types/policy.ts:1-13`
 
-### 4.11 Default Behavior When Policy Is Absent
+### 6.11 Default Behavior When Policy Is Absent
 
 If no policy is configured:
 - Implementations MAY allow all actions in development mode.
 - Implementations SHOULD default-deny in production mode unless explicitly configured otherwise.
 - Implementations MUST emit a warning at startup when no policy is loaded.
 
-### 4.12 Example Policy
+### 6.12 Example Policy
 
 ```yaml
 spec_version: "0.1"
@@ -974,13 +974,13 @@ custom_rules:
 
 ---
 
-## 5. Enforcement Decision Contract
+## 7. Enforcement Decision Contract
 
-### 5.1 Overview
+### 7.1 Overview
 
 The enforcement decision contract defines the interface between policy evaluation and runtime behavior. When an agent attempts an action, the policy enforcer evaluates it against the active policy and produces a `PolicyDecision`.
 
-### 5.2 PolicyDecision
+### 7.2 PolicyDecision
 
 ```typescript
 interface PolicyDecision {
@@ -994,7 +994,7 @@ interface PolicyDecision {
 - `violations`: Non-empty when `allowed` is `false`. Each entry describes a rule that was violated.
 - `warnings`: Advisory violations that do not block the action. Logged but not enforced. Warnings MUST NOT silently override violations.
 
-### 5.3 PolicyViolation
+### 7.3 PolicyViolation
 
 ```typescript
 interface PolicyViolation {
@@ -1008,9 +1008,9 @@ interface PolicyViolation {
 - `rule_id`: Machine-readable identifier (e.g. `"network.blocked"`, `"fs.not_allowed"`, `"tool.blocked"`).
 - `rule_name`: Human-readable rule name.
 - `message`: Explanation of why the violation occurred.
-- `capability`: The enforcement category (see Section 5.4).
+- `capability`: The enforcement category (see Section 7.4).
 
-### 5.4 Enforcement Categories
+### 7.4 Enforcement Categories
 
 Implementations MUST support the following enforcement categories:
 
@@ -1048,7 +1048,7 @@ Implementations MUST support the following enforcement categories:
 
 **Source:** `packages/sdks/typescript/src/policy-enforcer.ts`
 
-### 5.5 Domain Matching Semantics
+### 7.5 Domain Matching Semantics
 
 When evaluating a domain against a pattern list:
 
@@ -1065,7 +1065,7 @@ Evaluation order:
 
 **Source:** `packages/sdks/typescript/src/policy-enforcer.ts:239-248`
 
-### 5.6 Path Matching Semantics
+### 7.6 Path Matching Semantics
 
 When evaluating a filesystem path against a pattern list:
 
@@ -1081,7 +1081,7 @@ Evaluation order:
 
 **Source:** `packages/sdks/typescript/src/policy-enforcer.ts:250-262`
 
-### 5.7 Tool Pattern Matching Semantics
+### 7.7 Tool Pattern Matching Semantics
 
 When evaluating a tool name against an allowed tools list:
 
@@ -1110,7 +1110,7 @@ Evaluation order:
 
 **Source:** `packages/sdks/typescript/src/policy-enforcer.ts:74-140`
 
-### 5.8 Enforcement Behavior
+### 7.8 Enforcement Behavior
 
 When a policy violation occurs, implementations MUST behave as follows:
 
@@ -1119,7 +1119,7 @@ When a policy violation occurs, implementations MUST behave as follows:
 
 **Development override:** When the environment variable `SEKUIRE_POLICY_DEV_OVERRIDE` is set to `"true"`, all deny actions MUST be downgraded to warnings. This allows developers to iterate without being blocked by policy during development. Implementations MUST log a warning at initialization when override mode is active. Override mode MUST still emit audit events for every overridden violation.
 
-### 5.9 Enforcement Hooks
+### 7.9 Enforcement Hooks
 
 An OAG-compliant runtime SHOULD implement the following interception points in the agent execution loop:
 
@@ -1133,13 +1133,13 @@ An OAG-compliant runtime SHOULD implement the following interception points in t
 
 ---
 
-## 6. Audit Event Format
+## 8. Audit Event Format
 
-### 6.1 Overview
+### 8.1 Overview
 
 Agents emit structured audit events for every significant action. Events are buffered locally and submitted in batches to an audit sink (remote API endpoint, local file, or stdout).
 
-### 6.2 EventLog Schema
+### 8.2 EventLog Schema
 
 ```typescript
 interface EventLog {
@@ -1159,7 +1159,7 @@ interface EventLog {
 
 **Source:** `packages/sdks/typescript/src/logger.ts:34-43`, `packages/protocol/src/lib.rs:531-541`
 
-### 6.3 Event Types
+### 8.3 Event Types
 
 Implementations MUST support the following event types:
 
@@ -1173,7 +1173,7 @@ Implementations MUST support the following event types:
 | `file_access` | A filesystem read or write occurred |
 | `health` | Health heartbeat signal |
 
-### 6.4 Severity Levels
+### 8.4 Severity Levels
 
 | Severity | Description |
 |----------|-------------|
@@ -1182,7 +1182,7 @@ Implementations MUST support the following event types:
 | `warn` | Advisory conditions (e.g. policy warnings) |
 | `error` | Failures requiring attention |
 
-### 6.5 Batch Submission Format
+### 8.5 Batch Submission Format
 
 Events SHOULD be submitted in batches for efficiency. The batch request body:
 
@@ -1202,7 +1202,7 @@ interface LogEventResponse {
 }
 ```
 
-### 6.6 Event Signing (OPTIONAL)
+### 8.6 Event Signing (OPTIONAL)
 
 Implementations MAY sign audit events to prevent tampering:
 
@@ -1220,7 +1220,7 @@ hash = BLAKE3(canonical)
 valid = Ed25519_Verify(hash, signature, agent_public_key)
 ```
 
-### 6.7 Event Chaining (OPTIONAL)
+### 8.7 Event Chaining (OPTIONAL)
 
 For tamper-evident audit trails, implementations MAY chain events using hash links:
 
@@ -1237,7 +1237,7 @@ Each event includes the hash of the previous event. This creates a Merkle chain 
 - Reordering events breaks the chain
 - Detecting tampering is O(1) per event
 
-### 6.8 Health Heartbeat
+### 8.8 Health Heartbeat
 
 Agents SHOULD emit periodic health heartbeats (RECOMMENDED interval: 30 seconds).
 
@@ -1252,7 +1252,7 @@ interface AgentHealthRequest {
 }
 ```
 
-### 6.9 Local Sink Behavior
+### 8.9 Local Sink Behavior
 
 When no remote API endpoint is configured (or the endpoint is unreachable), implementations SHOULD fall back to local output:
 
@@ -1261,7 +1261,7 @@ When no remote API endpoint is configured (or the endpoint is unreachable), impl
 
 Events MUST NOT be silently dropped. Implementations SHOULD buffer events and retry submission when connectivity is restored, or log a warning indicating the number of events lost.
 
-### 6.10 Sensitive Data Handling
+### 8.10 Sensitive Data Handling
 
 Audit events MUST NOT contain raw credentials, secrets, or API keys. Implementations SHOULD apply the following sanitization before logging:
 
@@ -1273,13 +1273,13 @@ Audit events MUST NOT contain raw credentials, secrets, or API keys. Implementat
 
 ---
 
-## 7. Verification Result Schema
+## 9. Verification Result Schema
 
-### 7.1 Overview
+### 9.1 Overview
 
 Verification is a multi-stage process that evaluates an agent's security posture and compliance. The output is a `VerificationReport` that summarizes findings, scores, and pass/fail status.
 
-### 7.2 VerificationReport
+### 9.2 VerificationReport
 
 ```typescript
 interface VerificationReport {
@@ -1300,7 +1300,7 @@ interface VerificationReport {
 
 **Source:** `services/core/src/verification/report.rs:12-31`
 
-### 7.3 IssuesSummary
+### 9.3 IssuesSummary
 
 ```typescript
 interface IssuesSummary {
@@ -1315,7 +1315,7 @@ interface IssuesSummary {
 
 **Source:** `services/core/src/verification/report.rs:33-41`
 
-### 7.4 SecurityIssue
+### 9.4 SecurityIssue
 
 ```typescript
 interface SecurityIssue {
@@ -1331,7 +1331,7 @@ interface SecurityIssue {
 
 **Source:** `services/core/src/verification/models.rs:196-205`
 
-### 7.5 Vulnerability
+### 9.5 Vulnerability
 
 ```typescript
 interface Vulnerability {
@@ -1346,7 +1346,7 @@ interface Vulnerability {
 
 **Source:** `services/core/src/verification/models.rs:208-216`
 
-### 7.6 Severity and Score Impact
+### 9.6 Severity and Score Impact
 
 | Severity | Score Deduction |
 |----------|----------------|
@@ -1360,7 +1360,7 @@ The security score starts at 100 and each issue's deduction is subtracted. The f
 
 **Source:** `services/core/src/verification/models.rs:183-193`
 
-### 7.7 Pass Criteria
+### 9.7 Pass Criteria
 
 An agent passes verification when ALL of the following are true:
 
@@ -1371,7 +1371,7 @@ An agent passes verification when ALL of the following are true:
 
 **Source:** `services/core/src/verification/scorer.rs:92-111`
 
-### 7.8 Risk Level Calculation
+### 9.8 Risk Level Calculation
 
 ```
 if critical_issues > 0:                "critical"
@@ -1382,7 +1382,7 @@ otherwise:                             "low"
 
 **Source:** `services/core/src/verification/scorer.rs:70-89`
 
-### 7.9 Compliance Frameworks
+### 9.9 Compliance Frameworks
 
 The verification engine supports the following compliance frameworks. Each framework defines a set of checks against the agent manifest and code analysis results.
 
@@ -1395,7 +1395,7 @@ The verification engine supports the following compliance frameworks. Each frame
 
 The compliance score is computed as: `(passed_checks / total_checks) * 100`.
 
-### 7.10 VerificationStatus
+### 9.10 VerificationStatus
 
 ```typescript
 type VerificationStatus = "unverified" | "pending" | "verified" | "suspended";
@@ -1410,23 +1410,23 @@ type VerificationStatus = "unverified" | "pending" | "verified" | "suspended";
 
 **Source:** `packages/protocol/src/lib.rs:207-219`
 
-### 7.11 Local Verification
+### 9.11 Local Verification
 
 A local verifier MUST be able to:
 
 1. Recompute `sekuire_id` from manifest inputs using the algorithm in Section 2.2.
-2. Validate policy `hash` and optional `signature` per Section 4.10.
-3. Validate audit event schema and required fields per Section 6.2.
+2. Validate policy `hash` and optional `signature` per Section 6.10.
+3. Validate audit event schema and required fields per Section 8.2.
 
 ---
 
-## 8. Trust Protocol Headers
+## 10. Trust Protocol Headers
 
-### 8.1 Overview
+### 10.1 Overview
 
 Trust protocol headers are HTTP headers that convey an agent's identity, reputation, and verification status across service boundaries. They are protocol-agnostic and work with MCP, A2A, REST, or any HTTP-based transport.
 
-### 8.2 Header Definitions
+### 10.2 Header Definitions
 
 | Header | Type | Description |
 |--------|------|-------------|
@@ -1436,7 +1436,7 @@ Trust protocol headers are HTTP headers that convey an agent's identity, reputat
 | `X-Sekuire-Verification-Status` | string | One of: `unverified`, `pending`, `verified`, `suspended` |
 | `X-Sekuire-Risk-Level` | string | One of: `low`, `medium`, `high`, `unknown` |
 
-### 8.3 Header Generation
+### 10.3 Header Generation
 
 Implementations SHOULD add trust headers to outbound HTTP responses when agent identity information is available.
 
@@ -1448,7 +1448,7 @@ X-Sekuire-Verification-Status: verified
 X-Sekuire-Risk-Level: low
 ```
 
-### 8.4 Header Extraction
+### 10.4 Header Extraction
 
 When receiving requests with trust headers, implementations SHOULD extract and validate the headers. If the `X-Sekuire-Agent-ID` header is missing, the request SHOULD be treated as coming from an unidentified agent. Missing optional headers default to:
 
@@ -1461,13 +1461,13 @@ When receiving requests with trust headers, implementations SHOULD extract and v
 
 ---
 
-## 9. Handshake Protocol
+## 11. Handshake Protocol
 
-### 9.1 Overview
+### 11.1 Overview
 
 The handshake protocol provides mutual authentication between a client and an agent using Ed25519 signatures. It is a three-step challenge-response flow.
 
-### 9.2 Protocol Flow
+### 11.2 Protocol Flow
 
 ```
 Client                              Agent
@@ -1480,7 +1480,7 @@ Client                              Agent
   |                                   |
 ```
 
-### 9.3 Step 1: HandshakeHello
+### 11.3 Step 1: HandshakeHello
 
 The client generates a random nonce and sends it to the agent.
 
@@ -1490,7 +1490,7 @@ interface HandshakeHello {
 }
 ```
 
-### 9.4 Step 2: HandshakeWelcome
+### 11.4 Step 2: HandshakeWelcome
 
 The agent responds with:
 1. Its SekuireID
@@ -1512,7 +1512,7 @@ interface HandshakeWelcome {
 2. Verify that `Ed25519_Verify(client_nonce, signature_c, agent_public_key)` returns true.
 3. If verification fails, abort the handshake.
 
-### 9.5 Step 3: HandshakeAuth
+### 11.5 Step 3: HandshakeAuth
 
 The client signs the agent's nonce, proving its own identity.
 
@@ -1527,7 +1527,7 @@ interface HandshakeAuth {
 2. Verify that `Ed25519_Verify(agent_nonce, signature_a, client_public_key)` returns true.
 3. If verification fails, reject the client.
 
-### 9.6 Security Considerations
+### 11.6 Security Considerations
 
 - Nonces MUST be cryptographically random and MUST NOT be reused.
 - Each nonce SHOULD be valid for a limited time window (RECOMMENDED: 60 seconds).
@@ -1538,13 +1538,13 @@ interface HandshakeAuth {
 
 ---
 
-## 10. A2A Interoperability Types
+## 12. A2A Interoperability Types
 
-### 10.1 Overview
+### 12.1 Overview
 
 These types define agent-to-agent communication aligned with the [A2A Protocol](https://github.com/a2aproject/A2A).
 
-### 10.2 AgentCard
+### 12.2 AgentCard
 
 The AgentCard is the self-description document that an agent publishes for discovery.
 
@@ -1588,7 +1588,7 @@ interface SecurityScheme {
 
 **Source:** `packages/sdks/typescript/src/types/a2a-types.ts:13-101`
 
-### 10.3 Messages
+### 12.3 Messages
 
 ```typescript
 interface A2AMessage {
@@ -1602,7 +1602,7 @@ type A2AMessagePart =
   | { type: "data"; data: unknown };
 ```
 
-### 10.4 Tasks
+### 12.4 Tasks
 
 ```typescript
 type A2ATaskState =
@@ -1632,7 +1632,7 @@ interface A2AArtifact {
 }
 ```
 
-### 10.5 JSON-RPC 2.0 Transport
+### 12.5 JSON-RPC 2.0 Transport
 
 A2A communication uses JSON-RPC 2.0 as the transport envelope.
 
@@ -1661,7 +1661,7 @@ interface JsonRpcResponse<T = unknown> {
 | `tasks/cancel` | Cancel a running task | `{ taskId }` |
 | `tasks/sendSubscribe` | Send and subscribe to updates via SSE | `{ taskId?, message }` |
 
-### 10.6 SSE Streaming Format
+### 12.6 SSE Streaming Format
 
 For streaming task updates, the server sends Server-Sent Events:
 
@@ -1681,64 +1681,64 @@ Each SSE event is a JSON-serialized `TaskUpdateEvent`.
 
 ---
 
-## 11. Conformance Levels
+## 13. Conformance Levels
 
 Implementations MAY declare their conformance level. Three levels are defined:
 
 ### Level 1: Identity + Policy
 
-- Implements Sections 2 (Identity), 3 (Manifest), and 4 (Policy Declaration).
-- Agent can compute its SekuireID and declare a policy.
+- Implements Sections 2 (Identity), 3 (Manifest), 4 (System Prompt), 5 (Tool Definition), and 6 (Policy Declaration).
+- Agent can compute its SekuireID, provide conforming system prompt and tool definitions, and declare a policy.
 - Runtime enforcement is not required.
 
 ### Level 2: Runtime Enforcement
 
-- All of Level 1, plus Section 5 (Enforcement Decision Contract).
+- All of Level 1, plus Section 7 (Enforcement Decision Contract).
 - Agent enforces policy at runtime and produces `PolicyDecision` results.
 - Audit logging is not required.
 
 ### Level 3: Verifiable Audit Trail
 
-- All of Level 2, plus Section 6 (Audit Event Format) and Section 7.11 (Local Verification).
+- All of Level 2, plus Section 8 (Audit Event Format) and Section 9.11 (Local Verification).
 - Agent emits signed audit events.
 - Third parties can verify identity, policy integrity, and audit evidence.
 
 ---
 
-## 12. Security Considerations
+## 14. Security Considerations
 
-### 12.1 Key Management
+### 14.1 Key Management
 
 - Private keys MUST NOT be committed to source control.
 - Keys SHOULD be stored in protected local paths (e.g. `~/.sekuire/secret.key`) or secret managers.
 - Implementations SHOULD support key rotation.
 
-### 12.2 Policy Integrity
+### 14.2 Policy Integrity
 
 - Policy signatures SHOULD be verified before activation.
 - Implementations SHOULD reject policies with invalid or missing hashes.
 - The enforcer binary/code SHOULD be integrity-checked to prevent bypass.
 
-### 12.3 Replay Attacks
+### 14.3 Replay Attacks
 
 - Include timestamps in all signed messages (reject if outside a time window).
 - Include nonces in handshake flows (reject duplicates).
 - Use Merkle chaining for audit events (detect reordering).
 
-### 12.4 Data Exfiltration
+### 14.4 Data Exfiltration
 
 - Network allowlists limit outbound destinations.
 - Audit events MUST NOT contain raw secrets or credentials.
 - Tool/resource fields SHOULD be sanitized before persistence to avoid injection in downstream systems.
 
-### 12.5 Timestamps
+### 14.5 Timestamps
 
 - All timestamps MUST use UTC ISO 8601 format.
 - Verifiers SHOULD account for bounded clock skew (RECOMMENDED: 5 minutes).
 
 ---
 
-## 13. Extension Model
+## 15. Extension Model
 
 Extensions are allowed with namespacing:
 
@@ -1790,7 +1790,7 @@ The Rust CLI implementation (`packages/cli/src/services/auth.rs`) is the referen
 
 ## Appendix E: Unified File Format (Informative)
 
-A `sekuire.yml` file MAY combine agent manifest (Section 3), policy (Section 4), and SDK runtime extensions in a single file. The three zones are:
+A `sekuire.yml` file MAY combine agent manifest (Section 3), policy (Section 6), and SDK runtime extensions in a single file. The three zones are:
 
 1. **Manifest zone** - `spec_version`, `project`, `identity`, `capabilities`, `discovery`, `a2a`, `deployment`
 2. **Policy zone** - `permissions`, `tools`, `models`, `rate_limits`, `custom_rules`
@@ -1811,7 +1811,7 @@ identity:
   system_prompt_path: ./system_prompt.md
   tools_path: ./tools.json
 
-# Zone 2: Policy (OAGS Section 4)
+# Zone 2: Policy (OAGS Section 6)
 permissions:
   network:
     enabled: true
@@ -1836,10 +1836,18 @@ For the full canonical schema, see `sekuire-yml-schema.md`.
 
 ## Appendix F: Changelog
 
+### v0.1.2 (2026-02-16)
+
+- Added Section 4: System Prompt Format — standardizes structure, encoding, normative requirements, versioning, and size limits for system prompt files
+- Added Section 5: Tool Definition Schema — standardizes tool definition file format including ToolDefinition schema, ParametersSchema (JSON Schema subset), supported types, naming conventions, compliance metadata, and normative requirements
+- Renumbered Sections 4–13 to 6–15 to accommodate new sections
+- Updated all cross-references to reflect new section numbering
+- Updated Conformance Level 1 to include Sections 4 and 5
+
 ### v0.1.1 (2026-02-16)
 
-- Renamed `agent.models` to root-level `models` in PolicyContent schema (Section 4.2) to eliminate ambiguity with the overloaded `agent` key
-- Updated Section 4.12 example policy to use `models` instead of `agent.models`
+- Renamed `agent.models` to root-level `models` in PolicyContent schema (Section 6.2) to eliminate ambiguity with the overloaded `agent` key
+- Updated Section 6.12 example policy to use `models` instead of `agent.models`
 - Added Appendix E: Unified File Format (informative) describing how manifest + policy + SDK extensions coexist in a single `sekuire.yml`
 - Published companion document `sekuire-yml-schema.md` as the canonical file format reference
 
