@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oags.dev/schemas/profiles/a2a/v1.0",
+  "title": "OAG Agent-to-Agent Profile v1.0",
+  "description": "Optional agent-to-agent interoperability profile for the Open Agent Governance Specification. Defines agent discovery, task delegation, and messaging using JSON-RPC 2.0 over HTTP. Conformance level: Optional (MAY implement).",
+  "$defs": {
+    "agentCard": {
+      "type": "object",
+      "description": "Self-description document served at /.well-known/oag/agent.json",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "agentId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "version": { "type": "string" },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "streaming": { "type": "boolean" },
+            "pushNotifications": { "type": "boolean" },
+            "stateTransitionHistory": { "type": "boolean" }
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "tags": { "type": "array", "items": { "type": "string" } },
+              "examples": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["id", "name"]
+          }
+        },
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "schemes": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["oag-handshake", "bearer", "api-key"] }
+            }
+          }
+        }
+      },
+      "required": ["name", "url"]
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "agent"] },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["text", "file", "data"] },
+              "text": { "type": "string" },
+              "mimeType": { "type": "string" },
+              "data": { "type": "string" }
+            },
+            "required": ["type"]
+          }
+        }
+      },
+      "required": ["role", "parts"]
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "status": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": ["submitted", "working", "input-required", "completed", "canceled", "failed"]
+            },
+            "message": { "$ref": "#/$defs/message" }
+          },
+          "required": ["state"]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifact" }
+        }
+      },
+      "required": ["id", "status"]
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "text": { "type": "string" },
+              "mimeType": { "type": "string" },
+              "data": { "type": "string" }
+            },
+            "required": ["type"]
+          }
+        }
+      },
+      "required": ["parts"]
+    },
+    "jsonRpcMethods": {
+      "description": "Standard JSON-RPC 2.0 methods for A2A communication",
+      "type": "string",
+      "enum": [
+        "tasks/send",
+        "tasks/get",
+        "tasks/cancel",
+        "tasks/sendSubscribe"
+      ]
+    }
+  }
+}

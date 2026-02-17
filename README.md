@@ -16,13 +16,19 @@ OAGS defines **local-first governance primitives** that work across any language
 
 - **[OAGS v0.1](specs/oags-v0.1.md)** - The core specification: identity, policy, enforcement, audit, verification, trust headers, handshake, and A2A types (v0.1.1, Draft).
 - **[sekuire.yml Schema](specs/sekuire-yml-schema.md)** - Canonical file format reference for `sekuire.yml` / `sekuire.json`. Defines the unified manifest + policy + SDK extension schema.
+- **[Conformance Matrix](specs/conformance-matrix.md)** - SDK conformance status across reference implementations.
+- **[Profile Schemas](specs/profiles/)** - JSON schemas for each OAGS profile (identity, policy, audit, trust headers, handshake, A2A).
+- **[Test Vectors](specs/test-vectors/)** - Shared test vectors for cross-implementation conformance testing.
 
 ## Repository Structure
 
 ```
 ├── specs/
 │   ├── oags-v0.1.md              # Core specification
-│   └── sekuire-yml-schema.md     # File format reference
+│   ├── sekuire-yml-schema.md     # File format reference
+│   ├── conformance-matrix.md     # SDK conformance status
+│   ├── profiles/                 # JSON profile schemas
+│   └── test-vectors/             # Shared conformance vectors
 ├── examples/
 │   ├── customer-support/         # Policy with restrictions and custom rules
 │   ├── research-assistant/       # Full-featured (manifest + policy + SDK)

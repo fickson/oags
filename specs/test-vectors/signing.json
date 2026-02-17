@@ -1,0 +1,26 @@
+{
+  "description": "Ed25519 signing and verification test vectors for cross-SDK conformance",
+  "algorithm": "Ed25519 detached signatures (RFC 8032). Secret key is 64 bytes (seed + public key). Messages are UTF-8 encoded before signing.",
+  "keyPair": {
+    "description": "Deterministic keypair derived from BLAKE3('sekuire-test-vector-seed-v1') as seed",
+    "publicKey": "6240377d826c36c087404e4187dc21ecdbdc4db84e209fc386ac5d48bd08679e",
+    "secretKey": "5c71e9c26a3b718894e077e0c2e08c71b42cf61b2aaa833760c562e16e37f5f96240377d826c36c087404e4187dc21ecdbdc4db84e209fc386ac5d48bd08679e"
+  },
+  "vectors": [
+    {
+      "name": "simple_message",
+      "message": "Hello, Sekuire!",
+      "signature": "95fd8ab8c8e4baeff9275b551a5db9a26b2f33608ed07ab4210dc3c78b51cf57b172dd324d751b05d2dbaf3708c7b2ce6e690dfc064738f691982a3aed640105"
+    },
+    {
+      "name": "empty_message",
+      "message": "",
+      "signature": "66bc0a8d8e9ab3abb56cda1248d33dcadcd670710a0cc80205e2cbbb9c0825aaf6b5d8035fcfd57f8bb7cfec8c9d81ec7f5d650d9ce00097cf5632246f5cc004"
+    },
+    {
+      "name": "agent_id_message",
+      "message": "agent:28da5805f90c0b2d7437e448f40853092cc38f5fa223cae21994a8b76d338b53",
+      "signature": "ed62f488cd48706772a4d379a0ea98bad18d775e4105fc57f7ce0c7c5ad593f377c7b18d226c5a111386932e2a5fbcc8e45a568a693cfe71dc4083ddf0066f08"
+    }
+  ]
+}

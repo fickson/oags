@@ -1,0 +1,139 @@
+{
+  "description": "Canonical identity hash (V2) test vectors for cross-SDK conformance",
+  "algorithm": "V2: fingerprint = model:{model}|prompt:{BLAKE3(trim(prompt))}|tools:{BLAKE3(canonical_json(tools))}; sekuire_id = BLAKE3(fingerprint)",
+  "vectors": [
+    {
+      "name": "reference_vector",
+      "input": {
+        "model": "gpt-4o",
+        "systemPrompt": "You are a helpful assistant.",
+        "tools": "[]"
+      },
+      "intermediates": {
+        "promptHash": "b8c5de4f2d4c609746f1dc226580d4f9ddd4267c28d96a6edc1693a9095cb411",
+        "toolsHash": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+        "fingerprint": "model:gpt-4o|prompt:b8c5de4f2d4c609746f1dc226580d4f9ddd4267c28d96a6edc1693a9095cb411|tools:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+      },
+      "expected": "28da5805f90c0b2d7437e448f40853092cc38f5fa223cae21994a8b76d338b53"
+    },
+    {
+      "name": "different_model",
+      "input": {
+        "model": "gpt-4",
+        "systemPrompt": "You are a helpful assistant.",
+        "tools": "[]"
+      },
+      "intermediates": {
+        "promptHash": "b8c5de4f2d4c609746f1dc226580d4f9ddd4267c28d96a6edc1693a9095cb411",
+        "toolsHash": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+        "fingerprint": "model:gpt-4|prompt:b8c5de4f2d4c609746f1dc226580d4f9ddd4267c28d96a6edc1693a9095cb411|tools:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+      },
+      "expected": "3b10b903033ad3d39882ad4baebe3b8d942d77f68904d61b74fddffbea2e06d0"
+    },
+    {
+      "name": "tools_object",
+      "input": {
+        "model": "claude-3.5-sonnet",
+        "systemPrompt": "Analyze documents.",
+        "tools": "{\"name\": \"search\", \"type\": \"function\"}"
+      },
+      "intermediates": {
+        "canonicalTools": "{\"name\":\"search\",\"type\":\"function\"}",
+        "promptHash": "74bfa931233e8f410abf8af72d3e8f15b6eee8af005805e48d341eabb8f68419",
+        "toolsHash": "e92983886bfcc53eea676fdbae1b9ec5e5aeb21f8cfd553a2483b22a7723b9cc",
+        "fingerprint": "model:claude-3.5-sonnet|prompt:74bfa931233e8f410abf8af72d3e8f15b6eee8af005805e48d341eabb8f68419|tools:e92983886bfcc53eea676fdbae1b9ec5e5aeb21f8cfd553a2483b22a7723b9cc"
+      },
+      "expected": "3245e125eef4bf5373ce3c7ef1117f97803134da57da937dc7b0dbe020a36105"
+    },
+    {
+      "name": "prompt_whitespace_trim",
+      "description": "Leading/trailing whitespace in prompt must be trimmed before hashing",
+      "input": {
+        "model": "gpt-4o",
+        "systemPrompt": "  hello  ",
+        "tools": "[]"
+      },
+      "intermediates": {
+        "promptHash": "ea8f163db38682925e4491c5e58d4bb3506ef8c14eb78a86e908c5624a67200f",
+        "toolsHash": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+      },
+      "expected": "fa70f9f2f6f05c7fa9bedd2143b1c9e2086539a38a15fa664a6c27d0f31a6be1"
+    },
+    {
+      "name": "prompt_already_trimmed",
+      "description": "Same expected ID as prompt_whitespace_trim since trim('hello') == 'hello'",
+      "input": {
+        "model": "gpt-4o",
+        "systemPrompt": "hello",
+        "tools": "[]"
+      },
+      "expected": "fa70f9f2f6f05c7fa9bedd2143b1c9e2086539a38a15fa664a6c27d0f31a6be1"
+    },
+    {
+      "name": "empty_prompt",
+      "input": {
+        "model": "gpt-4o",
+        "systemPrompt": "",
+        "tools": "[]"
+      },
+      "intermediates": {
+        "promptHash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "toolsHash": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+      },
+      "expected": "70af1d60c34f18f7254d16061e44f46670e90080b00d4b9f950cb05a6d859161"
+    },
+    {
+      "name": "tools_whitespace_normalization",
+      "description": "JSON whitespace in tools must be normalized via canonical JSON (parse then stringify)",
+      "input": {
+        "model": "claude-3.5-sonnet",
+        "systemPrompt": "Analyze documents.",
+        "tools": "{ \"name\":  \"search\" , \"type\" :  \"function\" }"
+      },
+      "intermediates": {
+        "canonicalTools": "{\"name\":\"search\",\"type\":\"function\"}"
+      },
+      "expected": "3245e125eef4bf5373ce3c7ef1117f97803134da57da937dc7b0dbe020a36105"
+    },
+    {
+      "name": "complex_tools_array",
+      "input": {
+        "model": "gpt-4o-mini",
+        "systemPrompt": "You are an assistant with tools.",
+        "tools": "[{\"name\":\"search\",\"type\":\"function\"},{\"name\":\"calculate\",\"type\":\"function\"}]"
+      },
+      "intermediates": {
+        "canonicalTools": "[{\"name\":\"search\",\"type\":\"function\"},{\"name\":\"calculate\",\"type\":\"function\"}]",
+        "promptHash": "710a972c8f876ce178a2cae1687ec8a6baac13090f6db40e13f30aa906f32880",
+        "toolsHash": "869b901d1e547d75127f49be216ed9eef1d6374e8fbbd61b046d7685625fbfa0"
+      },
+      "expected": "14321dfd1ea852f648115666692f111fdf13a1c2fa40cb98c796b1774b33f711"
+    },
+    {
+      "name": "anthropic_model",
+      "input": {
+        "model": "claude-3-opus-20240229",
+        "systemPrompt": "You are a helpful assistant.",
+        "tools": "[]"
+      },
+      "intermediates": {
+        "promptHash": "b8c5de4f2d4c609746f1dc226580d4f9ddd4267c28d96a6edc1693a9095cb411",
+        "toolsHash": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+      },
+      "expected": "bb21e4a115b153c44fe86d4e66bb0d70248989fbbb0b27754ab43459524ae847"
+    },
+    {
+      "name": "multiline_prompt",
+      "input": {
+        "model": "gpt-4o",
+        "systemPrompt": "You are a helpful assistant.\nYou respond in JSON format.\nBe concise.",
+        "tools": "[]"
+      },
+      "intermediates": {
+        "promptHash": "8c76a4ed541a9f133440835dd3bb0096ae746be21f0ec920804d1175a85e6102",
+        "toolsHash": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+      },
+      "expected": "280f5080baa52e2354c0b61d74447d72c498d88c66378a5593dee83f1340219a"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oags.dev/schemas/profiles/trust-headers/v1.0",
+  "title": "OAG Trust Headers Profile v1.0",
+  "description": "Optional trust headers profile for the Open Agent Governance Specification. Defines HTTP headers for conveying agent identity and trust metadata in inter-service communication. Conformance level: Optional (MAY implement).",
+  "type": "object",
+  "properties": {
+    "X-OAG-Agent-ID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Content-addressable agent identifier (64-char hex BLAKE3 hash)"
+    },
+    "X-OAG-Reputation": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Agent reputation score (0-100)"
+    },
+    "X-OAG-Credentials": {
+      "type": "string",
+      "description": "Comma-separated list of credential badges (e.g. 'verified,hipaa,soc2')"
+    },
+    "X-OAG-Verification-Status": {
+      "type": "string",
+      "enum": ["unverified", "pending", "verified", "suspended"],
+      "description": "Current verification status of the agent"
+    },
+    "X-OAG-Risk-Level": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "unknown"],
+      "description": "Assessed risk level of the agent"
+    }
+  },
+  "required": ["X-OAG-Agent-ID"]
+}

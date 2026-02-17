@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oags.dev/schemas/profiles/handshake/v1.0",
+  "title": "OAG Handshake Profile v1.0",
+  "description": "Optional mutual authentication handshake profile for the Open Agent Governance Specification. Defines a 3-step nonce-based challenge-response protocol using Ed25519 signatures. Conformance level: Optional (MAY implement).",
+  "$defs": {
+    "hello": {
+      "type": "object",
+      "description": "Step 1: Client sends HELLO with a random nonce to the agent's /.well-known/oag/hello endpoint",
+      "properties": {
+        "client_nonce": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "32-byte random nonce, hex-encoded"
+        }
+      },
+      "required": ["client_nonce"]
+    },
+    "welcome": {
+      "type": "object",
+      "description": "Step 2: Agent responds with its identity, its own nonce, and a signature over the client's nonce",
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Agent's content-addressable identifier"
+        },
+        "agent_nonce": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "32-byte random nonce from agent, hex-encoded"
+        },
+        "signature_c": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{128}$",
+          "description": "Ed25519 signature over the raw client_nonce bytes (not hex), hex-encoded"
+        },
+        "credentials": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of verifiable credentials (JWTs or badge identifiers)"
+        }
+      },
+      "required": ["agent_id", "agent_nonce", "signature_c", "credentials"]
+    },
+    "auth": {
+      "type": "object",
+      "description": "Step 3: Client signs the agent's nonce and sends AUTH to the agent's /.well-known/oag/auth endpoint",
+      "properties": {
+        "signature_a": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{128}$",
+          "description": "Ed25519 signature over the agent_nonce UTF-8 bytes, hex-encoded"
+        }
+      },
+      "required": ["signature_a"]
+    }
+  }
+}

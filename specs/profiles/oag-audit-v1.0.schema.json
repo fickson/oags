@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oags.dev/schemas/profiles/audit/v1.0",
+  "title": "OAG Audit Events Profile v1.0",
+  "description": "Core audit events profile for the Open Agent Governance Specification. Defines structured event logging for agent activity. Conformance level: Core (MUST implement).",
+  "type": "object",
+  "properties": {
+    "agentId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "Unique session identifier for grouping related events"
+    },
+    "eventType": {
+      "$ref": "#/$defs/eventType"
+    },
+    "severity": {
+      "$ref": "#/$defs/severity"
+    },
+    "eventTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the event occurred"
+    },
+    "eventData": {
+      "type": "object",
+      "description": "Event-specific payload"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional context (SDK version, environment, etc.)"
+    }
+  },
+  "required": ["agentId", "sessionId", "eventType", "severity", "eventTimestamp", "eventData"],
+  "$defs": {
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "tool_execution",
+        "model_call",
+        "policy_violation",
+        "policy_check",
+        "network_access",
+        "file_access",
+        "health"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["debug", "info", "warn", "error"]
+    },
+    "batchRequest": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#" },
+          "maxItems": 100
+        }
+      },
+      "required": ["events"]
+    },
+    "healthHeartbeat": {
+      "type": "object",
+      "properties": {
+        "agentId": { "type": "string" },
+        "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] },
+        "sessionId": { "type": "string" },
+        "sdkVersion": { "type": "string" },
+        "environment": { "type": "string" }
+      },
+      "required": ["agentId", "status", "sessionId"]
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oags.dev/schemas/profiles/policy/v1.0",
+  "title": "OAG Policy Enforcement Profile v1.0",
+  "description": "Core policy enforcement profile for the Open Agent Governance Specification. Defines runtime constraints on agent behavior. Conformance level: Core (MUST implement).",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "object",
+      "properties": {
+        "models": {
+          "type": "object",
+          "properties": {
+            "allowed_models": { "type": "array", "items": { "type": "string" } },
+            "blocked_models": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "tools": {
+          "type": "object",
+          "properties": {
+            "allowed_tools": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            },
+            "blocked_tools": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "network": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "require_tls": { "type": "boolean" },
+                "allowed_domains": { "type": "array", "items": { "type": "string" } },
+                "blocked_domains": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "filesystem": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "allowed_paths": { "type": "array", "items": { "type": "string" } },
+                "blocked_paths": { "type": "array", "items": { "type": "string" } },
+                "allowed_extensions": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "api": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "allowed_services": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "service_name": { "type": "string" },
+                      "endpoints": { "type": "array", "items": { "type": "string" } }
+                    },
+                    "required": ["service_name"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "rate_limits": {
+          "type": "object",
+          "properties": {
+            "per_agent": {
+              "type": "object",
+              "properties": {
+                "requests_per_minute": { "type": "integer", "minimum": 0 },
+                "requests_per_hour": { "type": "integer", "minimum": 0 },
+                "tokens_per_minute": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "enforcementDecision": {
+      "type": "string",
+      "enum": ["allow", "deny", "warn"],
+      "description": "Outcome of a policy check. 'allow' permits the action, 'deny' blocks it, 'warn' logs without blocking."
+    },
+    "ruleIds": {
+      "description": "Standard rule identifiers returned on policy violations",
+      "type": "string",
+      "enum": [
+        "network.disabled", "network.tls_required", "network.blocked", "network.not_allowed", "network.missing",
+        "fs.disabled", "fs.blocked", "fs.not_allowed", "fs.ext", "fs.missing",
+        "tool.blocked", "tool.not_allowed",
+        "model.blocked", "model.not_allowed",
+        "api.disabled", "api.not_allowed", "api.missing",
+        "rate_limit.exceeded"
+      ]
+    },
+    "domainMatching": {
+      "description": "Domain matching rules: exact match ('api.example.com'), wildcard subdomain ('*.example.com' matches 'sub.example.com'), any ('*')"
+    },
+    "pathMatching": {
+      "description": "Path matching rules: exact match ('/home/user/data'), prefix wildcard ('/tmp/*' matches '/tmp/foo.txt')"
+    }
+  }
+}

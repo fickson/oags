@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oags.dev/schemas/profiles/identity/v1.0",
+  "title": "OAG Identity Profile v1.0",
+  "description": "Core identity profile for the Open Agent Governance Specification. Defines content-addressable agent identity using BLAKE3 hashing and Ed25519 signing. Conformance level: Core (MUST implement).",
+  "type": "object",
+  "properties": {
+    "agentId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "64-character hex BLAKE3 hash computed from the canonical fingerprint string"
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^model:.+\\|prompt:[0-9a-f]{64}\\|tools:[0-9a-f]{64}$",
+      "description": "Canonical fingerprint: model:{model}|prompt:{BLAKE3(trim(systemPrompt))}|tools:{BLAKE3(canonicalJson(tools))}"
+    },
+    "publicKey": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Ed25519 public key (32 bytes, hex-encoded)"
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Cryptographic nonce (32 bytes, hex-encoded)"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{128}$",
+      "description": "Ed25519 detached signature (64 bytes, hex-encoded)"
+    }
+  },
+  "required": ["agentId"],
+  "$defs": {
+    "identityAlgorithm": {
+      "description": "V2 canonical identity algorithm. Steps: (1) promptHash = BLAKE3(trim(systemPrompt)), (2) toolsHash = BLAKE3(JSON.stringify(JSON.parse(tools))), (3) fingerprint = 'model:{model}|prompt:{promptHash}|tools:{toolsHash}', (4) agentId = BLAKE3(fingerprint)",
+      "type": "object",
+      "properties": {
+        "model": { "type": "string" },
+        "systemPrompt": { "type": "string" },
+        "tools": { "type": "string", "description": "JSON string of tools array or object" }
+      },
+      "required": ["model", "systemPrompt", "tools"]
+    },
+    "hashAlgorithm": {
+      "const": "BLAKE3",
+      "description": "All hashing uses BLAKE3 (32-byte output, hex-encoded to 64 characters)"
+    },
+    "signingAlgorithm": {
+      "const": "Ed25519",
+      "description": "All signing uses Ed25519 per RFC 8032 (detached signatures, 64-byte output)"
+    }
+  }
+}

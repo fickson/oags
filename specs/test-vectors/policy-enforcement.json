@@ -1,0 +1,146 @@
+{
+  "description": "Policy enforcement test vectors for cross-SDK conformance",
+  "policy": {
+    "content": {
+      "agent": {
+        "models": {
+          "allowed_models": ["gpt-4o", "gpt-4", "claude-3.5-sonnet"],
+          "blocked_models": ["gpt-4-32k"]
+        }
+      },
+      "tools": {
+        "allowed_tools": [
+          { "name": "calculator" },
+          { "name": "web_search" },
+          { "name": "file_read" }
+        ],
+        "blocked_tools": ["exec_command", "file_delete"]
+      },
+      "permissions": {
+        "network": {
+          "enabled": true,
+          "require_tls": true,
+          "allowed_domains": ["api.openai.com", "*.example.com"],
+          "blocked_domains": ["malicious.com", "evil.org"]
+        },
+        "filesystem": {
+          "enabled": true,
+          "allowed_paths": ["/tmp/*", "/home/user/data"],
+          "blocked_paths": ["/etc/*", "/root/*"],
+          "allowed_extensions": [".txt", ".json", ".csv"]
+        },
+        "api": {
+          "enabled": true,
+          "allowed_services": [
+            { "service_name": "openai", "endpoints": ["chat", "completions"] },
+            { "service_name": "stripe" }
+          ]
+        }
+      },
+      "rate_limits": {
+        "per_agent": {
+          "requests_per_minute": 60,
+          "requests_per_hour": 3600,
+          "tokens_per_minute": 100000
+        }
+      }
+    }
+  },
+  "vectors": [
+    {
+      "name": "network_allowed_exact",
+      "action": { "type": "network", "domain": "api.openai.com", "protocol": "https" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "network_allowed_wildcard",
+      "action": { "type": "network", "domain": "sub.example.com", "protocol": "https" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "network_blocked",
+      "action": { "type": "network", "domain": "malicious.com", "protocol": "https" },
+      "expected": { "decision": "deny", "rule": "network.blocked" }
+    },
+    {
+      "name": "network_not_allowed",
+      "action": { "type": "network", "domain": "unknown.com", "protocol": "https" },
+      "expected": { "decision": "deny", "rule": "network.not_allowed" }
+    },
+    {
+      "name": "network_tls_required",
+      "action": { "type": "network", "domain": "api.openai.com", "protocol": "http" },
+      "expected": { "decision": "deny", "rule": "network.tls_required" }
+    },
+    {
+      "name": "filesystem_allowed_wildcard",
+      "action": { "type": "filesystem", "path": "/tmp/data.json", "operation": "read" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "filesystem_allowed_exact",
+      "action": { "type": "filesystem", "path": "/home/user/data", "operation": "read" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "filesystem_blocked",
+      "action": { "type": "filesystem", "path": "/etc/passwd", "operation": "read" },
+      "expected": { "decision": "deny", "rule": "fs.blocked" }
+    },
+    {
+      "name": "filesystem_not_allowed",
+      "action": { "type": "filesystem", "path": "/var/log/app.log", "operation": "read" },
+      "expected": { "decision": "deny", "rule": "fs.not_allowed" }
+    },
+    {
+      "name": "tool_allowed",
+      "action": { "type": "tool", "toolName": "calculator" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "tool_blocked",
+      "action": { "type": "tool", "toolName": "exec_command" },
+      "expected": { "decision": "deny", "rule": "tool.blocked" }
+    },
+    {
+      "name": "tool_not_allowed",
+      "action": { "type": "tool", "toolName": "unknown_tool" },
+      "expected": { "decision": "deny", "rule": "tool.not_allowed" }
+    },
+    {
+      "name": "model_allowed",
+      "action": { "type": "model", "model": "gpt-4o" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "model_blocked",
+      "action": { "type": "model", "model": "gpt-4-32k" },
+      "expected": { "decision": "deny", "rule": "model.blocked" }
+    },
+    {
+      "name": "model_not_allowed",
+      "action": { "type": "model", "model": "llama-3-70b" },
+      "expected": { "decision": "deny", "rule": "model.not_allowed" }
+    },
+    {
+      "name": "api_allowed",
+      "action": { "type": "api", "service": "openai" },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "api_not_allowed",
+      "action": { "type": "api", "service": "unknown_service" },
+      "expected": { "decision": "deny", "rule": "api.not_allowed" }
+    },
+    {
+      "name": "rate_limit_under",
+      "action": { "type": "rate_limit", "limitType": "request", "count": 1 },
+      "expected": { "decision": "allow" }
+    },
+    {
+      "name": "rate_limit_exceeded",
+      "action": { "type": "rate_limit", "limitType": "request", "count": 61 },
+      "expected": { "decision": "deny", "rule": "rate_limit.exceeded" }
+    }
+  ]
+}
