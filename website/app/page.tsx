@@ -117,6 +117,7 @@ const conformanceLevels = [
 const implementations = [
   {
     name: "TypeScript SDK",
+    status: "available",
     pkg: "@sekuire/sdk",
     install: "npm install @sekuire/sdk",
     repo: "https://github.com/sekuire/sdk",
@@ -124,20 +125,21 @@ const implementations = [
   },
   {
     name: "Python SDK",
+    status: "coming-soon",
     pkg: "sekuire-sdk",
-    install: "pip install sekuire-sdk",
     repo: "https://github.com/sekuire/python-sdk",
-    description: "FastAPI integration, PyNaCl Ed25519, multi-provider LLM support.",
+    description: "Reference Python implementation is in progress and will be released soon.",
   },
   {
     name: "Rust SDK",
+    status: "coming-soon",
     pkg: "sekuire-sdk",
-    install: "cargo add sekuire-sdk",
     repo: "https://github.com/sekuire/rust-sdk",
-    description: "Core verification, identity computation, and policy enforcement library.",
+    description: "Reference Rust implementation is in progress and will be released soon.",
   },
   {
     name: "CLI",
+    status: "available",
     pkg: "sekuire-agent-cli",
     install: "cargo install sekuire-agent-cli",
     repo: "https://github.com/sekuire/cli",
@@ -366,13 +368,25 @@ export default function Home() {
             </h2>
             <p className="mt-4 text-muted-foreground">
               Official SDKs and tools that implement the OAGS specification.
+              TypeScript and CLI are available now. Python and Rust are coming soon.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {implementations.map((impl) => (
               <div key={impl.name} className="glass-card p-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{impl.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">{impl.name}</h3>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${
+                        impl.status === "coming-soon"
+                          ? "border-border/70 text-muted-foreground"
+                          : "border-primary/40 text-primary"
+                      }`}
+                    >
+                      {impl.status === "coming-soon" ? "Coming Soon" : "Available"}
+                    </span>
+                  </div>
                   <a
                     href={impl.repo}
                     target="_blank"
@@ -385,12 +399,18 @@ export default function Home() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   {impl.description}
                 </p>
-                <div className="mt-4 flex items-center gap-2 rounded-lg bg-[oklch(0.10_0.015_250)] px-3 py-2">
-                  <Terminal className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <code className="flex-1 font-mono text-xs text-foreground/80">
-                    {impl.install}
-                  </code>
-                </div>
+                {impl.install ? (
+                  <div className="mt-4 flex items-center gap-2 rounded-lg bg-[oklch(0.10_0.015_250)] px-3 py-2">
+                    <Terminal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <code className="flex-1 font-mono text-xs text-foreground/80">
+                      {impl.install}
+                    </code>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-lg border border-border/50 bg-[oklch(0.10_0.015_250)] px-3 py-2 text-muted-foreground text-xs">
+                    Installation command will be published at launch.
+                  </div>
+                )}
               </div>
             ))}
           </div>
