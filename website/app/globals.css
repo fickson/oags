@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --background: oklch(0.12 0.015 250);
+  --foreground: oklch(0.9791 0 0);
+  --card: oklch(0.16 0.012 250);
+  --card-foreground: oklch(0.9791 0 0);
+  --primary: oklch(0.68 0.13 208);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.3449 0.0743 208);
+  --secondary-foreground: oklch(0.9791 0 0);
+  --muted: oklch(0.22 0.012 208);
+  --muted-foreground: oklch(0.65 0.01 208);
+  --accent: oklch(0.80 0.16 83.75);
+  --accent-foreground: oklch(0.1448 0 0);
+  --border: oklch(0.25 0.015 250);
+  --input: oklch(0.22 0.012 250);
+  --ring: oklch(0.68 0.13 208);
+  --status-active: oklch(0.72 0.15 170);
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-status-active: var(--status-active);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme {
+  @keyframes fade-up {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.glass-card {
+  @apply rounded-2xl border border-border/40 bg-card/25 backdrop-blur-md;
+}
+
+.section-container {
+  @apply mx-auto max-w-[1220px] px-4 py-20 md:px-10;
+}
+
+.badge {
+  @apply rounded-full border border-border/60 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-muted-foreground;
+}
+
+.code-block {
+  @apply rounded-xl border border-border/40 bg-[oklch(0.10_0.015_250)] p-4 font-mono text-sm leading-relaxed;
+}

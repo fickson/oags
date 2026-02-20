@@ -35,13 +35,18 @@
           "pattern": "^[0-9a-f]{128}$",
           "description": "Ed25519 signature over the raw client_nonce bytes (not hex), hex-encoded"
         },
+        "agent_public_key": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Agent Ed25519 public key, hex-encoded"
+        },
         "credentials": {
           "type": "array",
           "items": { "type": "string" },
           "description": "List of verifiable credentials (JWTs or badge identifiers)"
         }
       },
-      "required": ["agent_id", "agent_nonce", "signature_c", "credentials"]
+      "required": ["agent_id", "agent_nonce", "signature_c", "agent_public_key", "credentials"]
     },
     "auth": {
       "type": "object",
@@ -51,9 +56,39 @@
           "type": "string",
           "pattern": "^[0-9a-f]{128}$",
           "description": "Ed25519 signature over the agent_nonce UTF-8 bytes, hex-encoded"
+        },
+        "client_public_key": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Client Ed25519 public key, hex-encoded"
+        },
+        "client_nonce": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Optional HELLO nonce echo for nonce consistency checks"
         }
       },
-      "required": ["signature_a"]
+      "required": ["signature_a", "client_public_key"]
+    },
+    "auth_result": {
+      "type": "object",
+      "description": "Step 3 response: AUTH success with short-lived session token",
+      "properties": {
+        "success": {
+          "const": true
+        },
+        "session_token": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Opaque session token used for signed endpoint requests"
+        },
+        "expires_in_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Session TTL in seconds"
+        }
+      },
+      "required": ["success", "session_token", "expires_in_seconds"]
     }
   }
 }

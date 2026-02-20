@@ -10,22 +10,39 @@ OAGS defines **local-first governance primitives** that work across any language
 - **Runtime Policy Enforcement** — policies enforced during execution, not just declared
 - **Cryptographic Verification** — all claims backed by Ed25519 digital signatures
 - **Mutual Authentication** — agent-to-agent trust handshake protocol
+- **Signed Runtime Requests** — optional session-backed signatures for protected HTTP endpoints
 - **Audit Trail** — structured, tamper-evident audit logging
 
 ## Specifications
 
+- **[Start Here](specs/README.md)** - Recommended reading order for first-time implementers.
+- **[5-Minute Quickstart](specs/quickstart-5-minutes.md)** - Fastest path from clean clone to first conformance run.
 - **[OAGS v0.1](specs/oags-v0.1.md)** - The core specification: identity, policy, enforcement, audit, verification, trust headers, handshake, and A2A types (v0.1.1, Draft).
 - **[sekuire.yml Schema](specs/sekuire-yml-schema.md)** - Canonical file format reference for `sekuire.yml` / `sekuire.json`. Defines the unified manifest + policy + SDK extension schema.
+- **[Conformance Harness](specs/conformance-harness.md)** - Runner/adapters and profile execution contract.
 - **[Conformance Matrix](specs/conformance-matrix.md)** - SDK conformance status across reference implementations.
 - **[Profile Schemas](specs/profiles/)** - JSON schemas for each OAGS profile (identity, policy, audit, trust headers, handshake, A2A).
 - **[Test Vectors](specs/test-vectors/)** - Shared test vectors for cross-implementation conformance testing.
+
+## Website
+
+The specification website is available at [oags.sekuire.ai](https://oags.sekuire.ai) and lives in the `website/` directory. It is a Next.js site that presents the spec content, conformance levels, implementation links, and community resources.
+
+```bash
+cd website
+npm install
+npm run dev
+```
 
 ## Repository Structure
 
 ```
 ├── specs/
+│   ├── README.md                 # Start-here index
+│   ├── quickstart-5-minutes.md   # First implementation path
 │   ├── oags-v0.1.md              # Core specification
 │   ├── sekuire-yml-schema.md     # File format reference
+│   ├── conformance-harness.md    # Harness usage guide
 │   ├── conformance-matrix.md     # SDK conformance status
 │   ├── profiles/                 # JSON profile schemas
 │   └── test-vectors/             # Shared conformance vectors
@@ -34,7 +51,9 @@ OAGS defines **local-first governance primitives** that work across any language
 │   ├── research-assistant/       # Full-featured (manifest + policy + SDK)
 │   ├── minimal-agent/            # Bare minimum Level 1 conformance
 │   └── multi-provider/           # LLM provider configuration variants
+├── website/                      # Next.js specification website
 ├── LICENSE                       # Apache 2.0
+├── CHANGELOG.md                  # Spec/docs change history
 ├── CONTRIBUTING.md               # Contribution guidelines
 └── CODE_OF_CONDUCT.md
 ```

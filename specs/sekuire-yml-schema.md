@@ -248,6 +248,9 @@ server:
   framework?: string           # express, fastapi, etc.
   port?: number
   host?: string
+  auth?:
+    type?: string              # signed | none (signed recommended for /chat + /webhook)
+    protected_paths?: string[] # Defaults: ["/chat", "/webhook"]
 ```
 
 ---

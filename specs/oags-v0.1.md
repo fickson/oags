@@ -1503,14 +1503,16 @@ interface HandshakeWelcome {
   agent_id: string;          // SekuireID of the agent
   agent_nonce: string;       // 64-char hex (32 random bytes)
   signature_c: string;       // Ed25519 signature of client_nonce using agent's private key
+  agent_public_key: string;  // Agent Ed25519 public key (32-byte hex)
   credentials: string[];     // List of signed verifiable credentials (JWTs)
 }
 ```
 
 **Client verification:**
-1. Look up the agent's public key using `agent_id`.
-2. Verify that `Ed25519_Verify(client_nonce, signature_c, agent_public_key)` returns true.
-3. If verification fails, abort the handshake.
+1. Prefer `agent_public_key` from the handshake response.
+2. If omitted by implementation, look up the agent's public key using `agent_id`.
+3. Verify that `Ed25519_Verify(client_nonce, signature_c, agent_public_key)` returns true.
+4. If verification fails, abort the handshake.
 
 ### 11.5 Step 3: HandshakeAuth
 
@@ -1518,21 +1520,60 @@ The client signs the agent's nonce, proving its own identity.
 
 ```typescript
 interface HandshakeAuth {
-  signature_a: string;       // Ed25519 signature of agent_nonce using client's private key
+  signature_a: string;        // Ed25519 signature of agent_nonce using client's private key
+  client_public_key: string;  // Client Ed25519 public key (32-byte hex)
+  client_nonce?: string;      // Optional HELLO nonce echo (for nonce consistency checks)
+}
+
+interface HandshakeAuthResult {
+  success: true;
+  session_token: string;      // Opaque short-lived token for signed endpoint calls
+  expires_in_seconds: number; // Session TTL
 }
 ```
 
 **Agent verification:**
-1. Look up the client's public key.
+1. Validate `client_public_key` format.
 2. Verify that `Ed25519_Verify(agent_nonce, signature_a, client_public_key)` returns true.
-3. If verification fails, reject the client.
+3. If `client_nonce` is present, it MUST match the HELLO nonce for this handshake.
+4. If verification fails, reject the client.
+5. On success, return a short-lived `session_token`.
 
 ### 11.6 Security Considerations
 
 - Nonces MUST be cryptographically random and MUST NOT be reused.
 - Each nonce SHOULD be valid for a limited time window (RECOMMENDED: 60 seconds).
 - Implementations SHOULD reject handshakes where the nonce has expired.
-- The handshake does not establish a session. It is a one-time mutual authentication.
+- The handshake is one-time mutual authentication. Implementations MAY additionally issue a short-lived session token for signed endpoint requests.
+
+### 11.7 Signed Endpoint Requests (Recommended)
+
+For runtime endpoints that execute agent actions (for example `/chat`, `/webhook`), implementations SHOULD require signed requests bound to a valid handshake session.
+
+Recommended request headers:
+
+| Header | Description |
+|---|---|
+| `x-sekuire-session` | Session token returned by `HandshakeAuthResult` |
+| `x-sekuire-timestamp` | Unix epoch milliseconds (or ISO timestamp) |
+| `x-sekuire-signature` | Ed25519 signature over canonical request message |
+
+Recommended canonical request message:
+
+```text
+UPPERCASE_METHOD + "\n" + PATH + "\n" + TIMESTAMP_MS + "\n" + BLAKE3(CANONICAL_BODY)
+```
+
+Where:
+- `PATH` is the request path without query string.
+- `CANONICAL_BODY` is empty string for no body, otherwise compact JSON serialization.
+- `TIMESTAMP_MS` is numeric milliseconds since epoch.
+
+Verification requirements:
+1. Reject missing/expired session tokens.
+2. Reject timestamps outside the allowed skew window (RECOMMENDED: ±5 minutes).
+3. Verify signature using the client public key bound to the authenticated session.
+4. Return `401 Unauthorized` on verification failure.
 
 **Source:** `packages/protocol/src/lib.rs:260-278`
 
