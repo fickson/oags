@@ -140,7 +140,7 @@ const implementations = [
   {
     name: "CLI",
     status: "available",
-    pkg: "sekuire-agent-cli",
+    pkg: "sekuire-cli",
     install: "curl -fsSL https://install.sekuire.ai | sh",
     repo: "https://github.com/sekuire/cli",
     description: "Init projects, generate Ed25519 keys, compute identity hashes, publish and verify agents.",

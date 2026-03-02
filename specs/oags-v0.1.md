@@ -1805,7 +1805,7 @@ Extensions are allowed with namespacing:
 
 | Language | Package | Location |
 |----------|---------|----------|
-| Rust | `sekuire-agent-cli` | `packages/cli/` |
+| Rust | `sekuire-cli` | `packages/cli/` |
 | Rust | `sekuire-protocol` | `packages/protocol/` |
 | TypeScript | `@sekuire/sdk` | `packages/sdks/typescript/` |
 | Python | `sekuire` | `packages/sdks/python/` |
