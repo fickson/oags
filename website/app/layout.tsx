@@ -21,18 +21,23 @@ export const metadata: Metadata = {
     icon: "/logo.svg",
     apple: "/logo.svg",
   },
+  alternates: {
+    canonical: "https://oags.sekuire.ai",
+  },
   openGraph: {
     title: "OAGS - Open Agent Governance Specification",
     description:
       "An open specification for identity, policy, enforcement, audit, and verification of autonomous AI agents.",
     type: "website",
     url: "https://oags.sekuire.ai",
+    siteName: "OAGS",
+    locale: "en_US",
     images: [
       {
         url: "/og.jpg",
-        width: 3000,
-        height: 3000,
-        alt: "Sekuire - The Governance Layer for AI Agents",
+        width: 1200,
+        height: 630,
+        alt: "OAGS - Open Agent Governance Specification",
       },
     ],
   },
@@ -42,6 +47,7 @@ export const metadata: Metadata = {
     description:
       "An open specification for identity, policy, enforcement, audit, and verification of autonomous AI agents.",
     images: ["/og.jpg"],
+    site: "@sekuire",
   },
 };
 

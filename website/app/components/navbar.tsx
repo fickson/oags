@@ -17,7 +17,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-[1220px] items-center justify-between px-4 py-3 md:px-10">
-        <a href="#" className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2">
           <Image src="/logo.svg" alt="Sekuire" width={28} height={28} />
           <span className="font-mono text-lg font-bold tracking-tight text-foreground">
             OAGS

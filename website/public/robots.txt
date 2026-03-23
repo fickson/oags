@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oags.sekuire.ai/sitemap.xml

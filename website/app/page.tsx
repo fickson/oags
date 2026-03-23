@@ -178,9 +178,29 @@ policy:
     level: "full"
     sign_events: true`;
 
+const oagsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  name: "Open Agent Governance Specification (OAGS)",
+  headline: "OAGS - Open Agent Governance Specification",
+  description:
+    "An open specification for identity, policy, enforcement, audit, and verification of autonomous AI agents.",
+  url: "https://oags.sekuire.ai",
+  publisher: {
+    "@type": "Organization",
+    name: "Sekuire",
+    url: "https://sekuire.ai",
+  },
+  mainEntityOfPage: "https://oags.sekuire.ai",
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(oagsJsonLd) }}
+      />
       <Navbar />
 
       {/* Hero */}
