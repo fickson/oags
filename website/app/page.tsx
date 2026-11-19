@@ -120,21 +120,21 @@ const implementations = [
     status: "available",
     pkg: "@sekuire/sdk",
     install: "npm install @sekuire/sdk",
-    repo: "https://github.com/sekuire/sdk",
+    repo: "https://github.com/fickson/typescript-sdk",
     description: "Multi-provider LLM support, local policy enforcement, structured audit logging.",
   },
   {
     name: "Python SDK",
     status: "coming-soon",
     pkg: "sekuire-sdk",
-    repo: "https://github.com/sekuire/python-sdk",
+    repo: "https://github.com/fickson/python-sdk",
     description: "Reference Python implementation is in progress and will be released soon.",
   },
   {
     name: "Rust SDK",
     status: "coming-soon",
     pkg: "sekuire-sdk",
-    repo: "https://github.com/sekuire/rust-sdk",
+    repo: "https://github.com/fickson/rust-sdk",
     description: "Reference Rust implementation is in progress and will be released soon.",
   },
   {
@@ -142,7 +142,7 @@ const implementations = [
     status: "available",
     pkg: "sekuire-cli",
     install: "curl -fsSL https://install.sekuire.ai | sh",
-    repo: "https://github.com/sekuire/cli",
+    repo: "https://github.com/fickson/cli",
     description: "Init projects, generate Ed25519 keys, compute identity hashes, publish and verify agents.",
   },
 ];
@@ -218,7 +218,7 @@ export default function Home() {
           </p>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
-              href="https://github.com/sekuire/oags/tree/main/specs"
+              href="https://github.com/fickson/oags/tree/main/specs"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
@@ -227,7 +227,7 @@ export default function Home() {
               Read the Spec
             </a>
             <a
-              href="https://github.com/sekuire/oags"
+              href="https://github.com/fickson/oags"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-border/60 px-6 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary/50"
@@ -453,7 +453,7 @@ export default function Home() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <a
-              href="https://github.com/sekuire/oags/issues/new?template=bug_report.md&title=%5BBug%5D+Brief+description"
+              href="https://github.com/fickson/oags/issues/new?template=bug_report.md&title=%5BBug%5D+Brief+description"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-card flex items-start gap-4 p-6 transition-colors hover:border-primary/40"
@@ -468,7 +468,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="https://github.com/sekuire/oags/issues/new?template=feature_request.md&title=%5BRFC%5D+Brief+description"
+              href="https://github.com/fickson/oags/issues/new?template=feature_request.md&title=%5BRFC%5D+Brief+description"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-card flex items-start gap-4 p-6 transition-colors hover:border-primary/40"
@@ -483,7 +483,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="https://github.com/sekuire/oags/issues/new"
+              href="https://github.com/fickson/oags/issues/new"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-card flex items-start gap-4 p-6 transition-colors hover:border-primary/40"
@@ -501,7 +501,7 @@ export default function Home() {
 
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <a
-              href="https://github.com/sekuire/oags/blob/main/CONTRIBUTING.md"
+              href="https://github.com/fickson/oags/blob/main/CONTRIBUTING.md"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-card flex items-start gap-4 p-6 transition-colors hover:border-primary/40"
@@ -516,7 +516,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="https://github.com/sekuire/oags/blob/main/CODE_OF_CONDUCT.md"
+              href="https://github.com/fickson/oags/blob/main/CODE_OF_CONDUCT.md"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-card flex items-start gap-4 p-6 transition-colors hover:border-primary/40"
@@ -531,7 +531,7 @@ export default function Home() {
               </div>
             </a>
             <a
-              href="https://github.com/sekuire/oags/issues"
+              href="https://github.com/fickson/oags/issues"
               target="_blank"
               rel="noopener noreferrer"
               className="glass-card flex items-start gap-4 p-6 transition-colors hover:border-primary/40"

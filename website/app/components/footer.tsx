@@ -15,7 +15,7 @@ export function Footer() {
 
         <div className="flex items-center gap-6">
           <a
-            href="https://github.com/sekuire/oags"
+            href="https://github.com/fickson/oags"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -24,7 +24,7 @@ export function Footer() {
             GitHub
           </a>
           <a
-            href="https://github.com/sekuire/oags/blob/main/LICENSE"
+            href="https://github.com/fickson/oags/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"

@@ -35,7 +35,7 @@ export function Navbar() {
             </a>
           ))}
           <a
-            href="https://github.com/sekuire/oags"
+            href="https://github.com/fickson/oags"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
@@ -68,7 +68,7 @@ export function Navbar() {
               </a>
             ))}
             <a
-              href="https://github.com/sekuire/oags"
+              href="https://github.com/fickson/oags"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
